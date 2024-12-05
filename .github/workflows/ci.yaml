@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TARGETS: $(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
+
 jobs:
   lockfile:
     if: false
@@ -53,12 +56,12 @@ jobs:
           set -e
           # targets=$(bazel query 'kind(oci_image, deps(:sign_and_push))')
           # only bazel build //java:java17_root_amd64_debian12 for now
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
-          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $targets
+          # targets=$TARGETS
+          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $TARGETS
       - name: Unit Tests
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test //... --build_tests_only
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $TARGETS --build_tests_only
       - name: Build Examples
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/...
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $TARGETS
 
   ci-images:
     name: CI image tests
@@ -87,9 +90,9 @@ jobs:
       - name: Fetch
         run: |
           for i in $(seq 20); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc cquery 'attr(tags, "amd64", ...)' && break
+            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc cquery 'attr(tags, "amd64", $TARGETS)' && break
             sleep 10;
           done
 
       - name: Image Tests
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $(bazel query 'attr(tags, "amd64", ...)')
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $TARGETS)
