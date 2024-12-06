@@ -43,23 +43,22 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           rm -rf /usr/share/dotnet/
-      - name: Evaluate Targets
-        id: evaluate-targets
-        run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
-          echo "TARGETS=$targets" >> $GITHUB_ENV
       - name: Fetch
         run: |
+          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
           for i in $(seq 10); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $TARGETS && break || sleep 180;
+            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $targets && break || sleep 180;
           done
       - name: Build All Images
         run: |
-          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $TARGETS
+          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
+          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $targets
       - name: Unit Tests
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $TARGETS --build_tests_only
+        run: |
+          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
+          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $targets --build_tests_only
       - name: Build Examples
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/...
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/java/...
 
   ci-images:
     name: CI image tests
@@ -85,15 +84,13 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           rm -rf /usr/share/dotnet/
-      - name: Evaluate Targets
-        id: evaluate-targets
-        run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
-          echo "TARGETS=$targets" >> $GITHUB_ENV
       - name: Fetch
         run: |
+          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
           for i in $(seq 20); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $TARGETS && break || sleep 10;
+            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $targets && break || sleep 10;
           done
       - name: Image Tests
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $TARGETS
+        run: |
+          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
+          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $targets
