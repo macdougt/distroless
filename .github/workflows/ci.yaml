@@ -55,8 +55,7 @@ jobs:
           bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $targets
       - name: Unit Tests
         run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
-          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $targets --build_tests_only
+          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test //java/... --build_tests_only
       - name: Build Examples
         run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/java/...
 
