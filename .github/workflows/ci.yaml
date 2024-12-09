@@ -45,19 +45,20 @@ jobs:
           rm -rf /usr/share/dotnet/
       - name: Fetch
         run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
           for i in $(seq 10); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $targets && break || sleep 180;
+            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch //... && break || sleep 180;
           done
       - name: Build All Images
         run: |
+          set -e
+          # targets=$(bazel query 'kind(oci_image, deps(:sign_and_push))')
+          # only bazel build //java:java17_root_amd64_debian12 for now
           targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
           bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build $targets
       - name: Unit Tests
-        run: |
-          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test //java/... --build_tests_only
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test //... --build_tests_only
       - name: Build Examples
-        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/java/...
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc build //examples/...
 
   ci-images:
     name: CI image tests
@@ -85,11 +86,9 @@ jobs:
           rm -rf /usr/share/dotnet/
       - name: Fetch
         run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
           for i in $(seq 20); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $targets && break || sleep 10;
+            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc cquery 'attr(tags, "amd64", ...)' && break
+            sleep 10;
           done
       - name: Image Tests
-        run: |
-          targets=$(bazel query 'kind(oci_image, deps(//java:java17_root_amd64_debian12))')
-          bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $targets
+        run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc test $(bazel query 'attr(tags, "amd64", ...)')
