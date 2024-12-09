@@ -46,7 +46,7 @@ jobs:
       - name: Fetch
         run: |
           for i in $(seq 10); do 
-            bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch //... && break || sleep 180;
+              bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc fetch $(bazel query 'deps(//java:java17_root_amd64_debian12)') && break || sleep 180;
           done
       - name: Build All Images
         run: |
